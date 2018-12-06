@@ -33,6 +33,10 @@ payload_input_schema = {
 def ping():
     return "Pong!"
 
+@app.route("/example")
+def example():
+    return '{ "data": { "one": 1, "two": 2 }, "template": "ivo.docx", "bucket_name": "ah-doc-templates", "user":"1243454554545" }'
+
 @app.route("/schema")
 def schema():
     return json.dumps(dict(input=payload_input_schema))
@@ -42,29 +46,25 @@ def index():
     return 'Block-export-doc'
 
 @app.route("/merge", methods=['POST', 'GET'])
-def fn():
-    data = dict(name='fidodf',
-                dsjds='sdkjds'
-    )
-    merger.merge(data=data, template="ivo.docx", bucket_name="ah-doc-templates", user="ivopivo")
-    return 'ivo'
-    # v = Validator()
-    # v.schema = payload_input_schema
-    # payload = request.form.get('payload', None)
-    # if not(payload):
-    #     raise payLoadIsMissing('There is no payload', status_code=500)
-    # try:
-    #     payload = json.loads(payload)
-    # except:
-    #     raise malformedJson("Payload present but malformed: {}".format(payload))
-    # #if v(payload):
-    # result = dict(success=True, payload=payments.result(payload))
-    # result = json.dumps(result)
-    # #LOG.console(result)
-    # return result
-    # #else:
-    #     #raise payloadNotMatchingSchema("Payload didn't match schema ({}\n{})".format(payload_input_schema, v.errors))
-        
+def fn():  
+    v = Validator()
+    v.schema = payload_input_schema
+    payload = request.form.get('payload', None)
+    if not(payload):
+        raise payLoadIsMissing('There is no payload', status_code=500)
+    try:
+        payload = json.loads(payload)
+    except:
+        raise malformedJson("Payload present but malformed: {}".format(payload))
+    
+    LOG.console(payload)
+
+    info = dict(url = merger.merge(**payload))
+    
+    result = dict(success=True, payload=info)
+    result = json.dumps(result)
+    return result
+   
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT'))
